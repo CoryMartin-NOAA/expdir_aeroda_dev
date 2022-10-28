@@ -1,0 +1,816 @@
+<?xml version="1.0"?>
+<!DOCTYPE workflow
+[
+	<!--
+	PROGRAM
+		Main workflow manager for Global Forecast System
+
+	NOTES:
+		This workflow was automatically generated at 2022-08-29 14:52:29.998239
+	-->
+	<!ENTITY PSLOT "aoddatest">
+	<!ENTITY ROTDIR "/work2/noaa/da/cmartin/GEFS-Aero/work/ROTDIRS//aoddatest">
+	<!ENTITY JOBS_DIR "/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow/jobs/rocoto">
+	<!ENTITY MAXTRIES "2">
+]>
+
+<workflow realtime="F" scheduler="slurm" cyclethrottle="3" taskthrottle="25">
+
+	<log verbosity="10"><cyclestr>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest/logs/@Y@m@d@H.log</cyclestr></log>
+
+	<!-- Define the cycles -->
+	<cycledef group="gdas" >201906140000 201906150000 06:00:00</cycledef>
+<task name="gdasprep" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/prep.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasprep_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:45:00</walltime>
+	<nodes>2:ppn=2:tpp=1</nodes>
+	<memory>40G</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasprep.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<metataskdep metatask="gdaspost" cycle_offset="-06:00:00"/>
+			<datadep><cyclestr offset="-06:00:00">&ROTDIR;/gdas.@Y@m@d/@H/atmos/gdas.t@Hz.atmf009.nc</cyclestr></datadep>
+			<datadep><cyclestr>/work2/noaa/da/cmartin/GEFS-Aero/glopara_dump//gdas.@Y@m@d/@H/atmos/gdas.t@Hz.updated.status.tm00.bufr_d</cyclestr></datadep>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gdasanal" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/anal.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasanal_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>01:00:00</walltime>
+	<nodes>11:ppn=8:tpp=5</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasanal.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<taskdep task="gdasprep"/>
+	</dependency>
+
+</task>
+
+<task name="gdassfcanl" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/sfcanl.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdassfcanl_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>1:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdassfcanl.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<taskdep task="gdasanal"/>
+	</dependency>
+
+</task>
+
+<task name="gdasanalcalc" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/analcalc.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasanalcalc_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>4:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasanalcalc.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gdasanal"/>
+			<taskdep task="gdassfcanl"/>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gdasaeroanlinit" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/aeroanlinit.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasaeroanlinit_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>1:ppn=40:tpp=1</nodes>
+	<memory>3072M</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasaeroanlinit.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<metataskdep metatask="gdaspost" cycle_offset="-06:00:00"/>
+			<datadep><cyclestr offset="-06:00:00">&ROTDIR;/gdas.@Y@m@d/@H/atmos/gdas.t@Hz.atmf009.nc</cyclestr></datadep>
+			<datadep><cyclestr>/work2/noaa/da/cmartin/GEFS-Aero/glopara_dump//gdas.@Y@m@d/@H/atmos/gdas.t@Hz.updated.status.tm00.bufr_d</cyclestr></datadep>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gdasaeroanlrun" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/aeroanlrun.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasaeroanlrun_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:30:00</walltime>
+	<nodes>2:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasaeroanlrun.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<taskdep task="gdasaeroanlinit"/>
+	</dependency>
+
+</task>
+
+<task name="gdasaeroanlfinal" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/aeroanlfinal.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasaeroanlfinal_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>1:ppn=40:tpp=1</nodes>
+	<memory>3072M</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasaeroanlfinal.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gdasaeroanlrun"/>
+			<cycleexistdep cycle_offset="-06:00:00"/>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gdasanaldiag" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/analdiag.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasanaldiag_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>3:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasanaldiag.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gdasanal"/>
+			<cycleexistdep cycle_offset="-06:00:00"/>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gdasgldas" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/gldas.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasgldas_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>3:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasgldas.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gdassfcanl"/>
+			<cycleexistdep cycle_offset="-06:00:00"/>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gdasfcst" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/fcst.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasfcst_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:30:00</walltime>
+	<nodes>5:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasfcst.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<or>
+			<and>
+				<taskdep task="gdassfcanl"/>
+				<taskdep task="gdasgldas"/>
+			</and>
+			<not><cycleexistdep cycle_offset="-06:00:00"/></not>
+		</or>
+	</dependency>
+
+</task>
+
+<metatask name="gdaspost">
+
+	<var name="grp">anl _f000-f000 _f001-f001 _f002-f002 _f003-f003 _f004-f004 _f005-f005 _f006-f006 _f007-f007 _f008-f008 _f009-f009</var>
+	<var name="dep">anl f000 f001 f002 f003 f004 f005 f006 f007 f008 f009</var>
+	<var name="lst">anl f000 f001 f002 f003 f004 f005 f006 f007 f008 f009</var>
+
+	<task name="gdaspost#grp#" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+		<command>&JOBS_DIR;/post.sh</command>
+
+		<jobname><cyclestr>&PSLOT;_gdaspost#grp#_@H</cyclestr></jobname>
+		<account>da-cpu</account>
+		<queue>batch</queue>
+		<partition>orion</partition>
+		<walltime>02:00:00</walltime>
+		<nodes>8:ppn=12:tpp=1</nodes>
+		<native>--export=NONE</native>
+
+		<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdaspost#grp#.log</cyclestr></join>
+
+		<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+		<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+		<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+		<envar><name>CDUMP</name><value>gdas</value></envar>
+		<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+		<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+		<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+		<envar><name>FHRGRP</name><value>#grp#</value></envar>
+		<envar><name>FHRLST</name><value>#lst#</value></envar>
+		<envar><name>ROTDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/ROTDIRS//aoddatest</value></envar>
+
+		<dependency>
+			<or>
+				<datadep><cyclestr>&ROTDIR;/gdas.@Y@m@d/@H/atmos/gdas.t@Hz.log#dep#.txt</cyclestr></datadep>
+				<taskdep task="gdasfcst"/>
+			</or>
+		</dependency>
+
+	</task>
+
+</metatask>
+
+<task name="gdasvrfy" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/vrfy.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasvrfy_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>03:00:00</walltime>
+	<nodes>3:ppn=1:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasvrfy.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<metataskdep metatask="gdaspost"/>
+	</dependency>
+
+</task>
+
+<task name="gdasarch" cycledefs="gdas" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/arch.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gdasarch_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>service</partition>
+	<walltime>06:00:00</walltime>
+	<nodes>1:ppn=1:tpp=1</nodes>
+	<memory>2048M</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gdasarch.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gdas</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gdasvrfy"/>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gfsprep" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/prep.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsprep_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:45:00</walltime>
+	<nodes>2:ppn=2:tpp=1</nodes>
+	<memory>40G</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsprep.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<metataskdep metatask="gdaspost" cycle_offset="-06:00:00"/>
+			<datadep><cyclestr offset="-06:00:00">&ROTDIR;/gdas.@Y@m@d/@H/atmos/gdas.t@Hz.atmf009.nc</cyclestr></datadep>
+			<datadep><cyclestr>/work2/noaa/da/cmartin/GEFS-Aero/glopara_dump//gfs.@Y@m@d/@H/atmos/gfs.t@Hz.updated.status.tm00.bufr_d</cyclestr></datadep>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gfsanal" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/anal.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsanal_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>01:00:00</walltime>
+	<nodes>11:ppn=8:tpp=5</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsanal.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<taskdep task="gfsprep"/>
+	</dependency>
+
+</task>
+
+<task name="gfssfcanl" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/sfcanl.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfssfcanl_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>1:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfssfcanl.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<taskdep task="gfsanal"/>
+	</dependency>
+
+</task>
+
+<task name="gfsanalcalc" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/analcalc.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsanalcalc_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>4:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsanalcalc.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gfsanal"/>
+			<taskdep task="gfssfcanl"/>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gfsaeroanlinit" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/aeroanlinit.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsaeroanlinit_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>1:ppn=40:tpp=1</nodes>
+	<memory>3072M</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsaeroanlinit.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<metataskdep metatask="gdaspost" cycle_offset="-06:00:00"/>
+			<datadep><cyclestr offset="-06:00:00">&ROTDIR;/gdas.@Y@m@d/@H/atmos/gdas.t@Hz.atmf009.nc</cyclestr></datadep>
+			<datadep><cyclestr>/work2/noaa/da/cmartin/GEFS-Aero/glopara_dump//gfs.@Y@m@d/@H/atmos/gfs.t@Hz.updated.status.tm00.bufr_d</cyclestr></datadep>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gfsaeroanlrun" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/aeroanlrun.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsaeroanlrun_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:30:00</walltime>
+	<nodes>2:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsaeroanlrun.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<taskdep task="gfsaeroanlinit"/>
+	</dependency>
+
+</task>
+
+<task name="gfsaeroanlfinal" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/aeroanlfinal.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsaeroanlfinal_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>00:10:00</walltime>
+	<nodes>1:ppn=40:tpp=1</nodes>
+	<memory>3072M</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsaeroanlfinal.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gfsaeroanlrun"/>
+			<cycleexistdep cycle_offset="-06:00:00"/>
+		</and>
+	</dependency>
+
+</task>
+
+<task name="gfsfcst" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/fcst.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsfcst_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>03:00:00</walltime>
+	<nodes>5:ppn=40:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsfcst.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gfssfcanl"/>
+		</and>
+	</dependency>
+
+</task>
+
+<metatask name="gfspost">
+
+	<var name="grp">anl _f000-f009 _f012-f021 _f024-f033 _f036-f042 _f045-f051 _f054-f060 _f063-f069 _f072-f078 _f081-f087 _f090-f096 _f099-f105 _f108-f114 _f117-f123 _f126-f132 _f135-f141 _f144-f150 _f153-f159 _f162-f168 _f171-f177 _f180-f186 _f189-f195 _f198-f204 _f207-f213 _f216-f222 _f225-f231 _f234-f240 _f243-f249 _f252-f258 _f261-f267 _f270-f276 _f279-f285 _f288-f294 _f297-f303 _f306-f312 _f315-f321 _f324-f330 _f333-f339 _f342-f348 _f351-f357 _f360-f366 _f369-f375 _f378-f384</var>
+	<var name="dep">anl f009 f021 f033 f042 f051 f060 f069 f078 f087 f096 f105 f114 f123 f132 f141 f150 f159 f168 f177 f186 f195 f204 f213 f222 f231 f240 f249 f258 f267 f276 f285 f294 f303 f312 f321 f330 f339 f348 f357 f366 f375 f384</var>
+	<var name="lst">anl f000_f003_f006_f009 f012_f015_f018_f021 f024_f027_f030_f033 f036_f039_f042 f045_f048_f051 f054_f057_f060 f063_f066_f069 f072_f075_f078 f081_f084_f087 f090_f093_f096 f099_f102_f105 f108_f111_f114 f117_f120_f123 f126_f129_f132 f135_f138_f141 f144_f147_f150 f153_f156_f159 f162_f165_f168 f171_f174_f177 f180_f183_f186 f189_f192_f195 f198_f201_f204 f207_f210_f213 f216_f219_f222 f225_f228_f231 f234_f237_f240 f243_f246_f249 f252_f255_f258 f261_f264_f267 f270_f273_f276 f279_f282_f285 f288_f291_f294 f297_f300_f303 f306_f309_f312 f315_f318_f321 f324_f327_f330 f333_f336_f339 f342_f345_f348 f351_f354_f357 f360_f363_f366 f369_f372_f375 f378_f381_f384</var>
+
+	<task name="gfspost#grp#" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+		<command>&JOBS_DIR;/post.sh</command>
+
+		<jobname><cyclestr>&PSLOT;_gfspost#grp#_@H</cyclestr></jobname>
+		<account>da-cpu</account>
+		<queue>batch</queue>
+		<partition>orion</partition>
+		<walltime>06:00:00</walltime>
+		<nodes>10:ppn=12:tpp=1</nodes>
+		<native>--export=NONE</native>
+
+		<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfspost#grp#.log</cyclestr></join>
+
+		<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+		<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+		<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+		<envar><name>CDUMP</name><value>gfs</value></envar>
+		<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+		<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+		<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+		<envar><name>FHRGRP</name><value>#grp#</value></envar>
+		<envar><name>FHRLST</name><value>#lst#</value></envar>
+		<envar><name>ROTDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/ROTDIRS//aoddatest</value></envar>
+
+		<dependency>
+			<or>
+				<datadep><cyclestr>&ROTDIR;/gfs.@Y@m@d/@H/atmos/gfs.t@Hz.log#dep#.txt</cyclestr></datadep>
+				<taskdep task="gfsfcst"/>
+			</or>
+		</dependency>
+
+	</task>
+
+</metatask>
+
+<task name="gfsvrfy" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/vrfy.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsvrfy_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>orion</partition>
+	<walltime>06:00:00</walltime>
+	<nodes>1:ppn=1:tpp=1</nodes>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsvrfy.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<metataskdep metatask="gfspost"/>
+	</dependency>
+
+</task>
+
+<metatask name="gfsmetp">
+
+	<var name="metpcase">g2g1 g2o1 pcp1</var>
+
+	<task name="gfsmetp#metpcase#" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+		<command>&JOBS_DIR;/metp.sh</command>
+
+		<jobname><cyclestr>&PSLOT;_gfsmetp#metpcase#_@H</cyclestr></jobname>
+		<account>da-cpu</account>
+		<queue>batch</queue>
+		<partition>orion</partition>
+		<walltime>06:00:00</walltime>
+		<nodes>1:ppn=4:tpp=1</nodes>
+		<native>--export=NONE</native>
+
+		<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsmetp#metpcase#.log</cyclestr></join>
+
+		<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+		<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+		<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+		<envar><name>CDUMP</name><value>gfs</value></envar>
+		<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+		<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+		<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+		<envar><name>SDATE_GFS</name><value>None</value></envar>
+		<envar><name>METPCASE</name><value>#metpcase#</value></envar>
+
+		<dependency>
+			<and>
+				<metataskdep metatask="gfspost"/>
+			</and>
+		</dependency>
+
+	</task>
+
+</metatask>
+
+<task name="gfsarch" cycledefs="gfs" maxtries="&MAXTRIES;">
+
+	<command>&JOBS_DIR;/arch.sh</command>
+
+	<jobname><cyclestr>&PSLOT;_gfsarch_@H</cyclestr></jobname>
+	<account>da-cpu</account>
+	<queue>batch</queue>
+	<partition>service</partition>
+	<walltime>06:00:00</walltime>
+	<nodes>1:ppn=1:tpp=1</nodes>
+	<memory>2048M</memory>
+	<native>--export=NONE</native>
+
+	<join><cyclestr>&ROTDIR;/logs/@Y@m@d@H/gfsarch.log</cyclestr></join>
+
+	<envar><name>RUN_ENVIR</name><value>emc</value></envar>
+	<envar><name>HOMEgfs</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/global-workflow</value></envar>
+	<envar><name>EXPDIR</name><value>/work2/noaa/da/cmartin/GEFS-Aero/work/expdir//aoddatest</value></envar>
+	<envar><name>CDUMP</name><value>gfs</value></envar>
+	<envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+	<envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+	<envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+
+	<dependency>
+		<and>
+			<taskdep task="gfsvrfy"/>
+			<metataskdep metatask="gfsmetp"/>
+		</and>
+	</dependency>
+
+</task>
+
+</workflow>
