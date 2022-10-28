@@ -1,0 +1,9 @@
+# rocoto db files
+*.db
+
+# log directory
+logs/
+
+# other files
+PDY
+ncepdate
